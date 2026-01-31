@@ -1,9 +1,0 @@
-POST http://127.0.0.1:8000/api/accounts/signup/
-Content-Type: application/json
-
-{
-  "username": "vismaya123",
-  "email": "vismaya123@gmail.com",
-  "password": "Password123"
-}
-
