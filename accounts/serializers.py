@@ -1,14 +1,17 @@
 from rest_framework import serializers
-from .models import Resume
-from rest_framework import serializers
-from django.contrib.auth.models import User
+from .models import CustomUser , Resume
 import re
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
-        model = User
+        model = CustomUser
         fields = ['username', 'email', 'password']
+    
+    def validate_email(self, value):
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email is already in use.")
+        return value
 
     def validate_password(self, value):
         if len(value) < 8:
@@ -29,7 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        user = User(
+        user = CustomUser(
             username=validated_data['username'],
             email=validated_data['email']
         )

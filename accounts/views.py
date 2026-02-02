@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework_simplejwt.tokens import RefreshToken
 from .utils import extract_text_from_resume
 from .serializers import UserSerializer, ResumeSerializer
 from .models import Resume
@@ -35,12 +36,19 @@ def login(request):
 
     user = authenticate(username=username, password=password)
 
-    if user:
+    if user is not None:
+        
+        refresh = RefreshToken.for_user(user)
+
         return Response(
             {
                 "message": "Login successful",
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
                 "username": user.username,
-                "email": user.email
+                "email": user.email,
+                "role": user.role,
+                "is_admin": user.is_staff,
             },
             status=status.HTTP_200_OK
         )

@@ -1,14 +1,15 @@
 from django.contrib import admin
-from .models import Resume
-# Register your models here.
+from .models import CustomUser, Resume
 
 
-from django.contrib import admin
-from .models import Resume
+
+@admin.register(CustomUser)
+class CustomUserAdmin(admin.ModelAdmin):
+    list_display = ['username', 'email', 'role', 'is_staff']
+    list_filter = ('role', 'is_staff')
+    search_fields = ('username', 'email')
 
 @admin.register(Resume)
 class ResumeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'file', 'uploaded_at')
-    list_filter = ('uploaded_at', 'user')
-    search_fields = ('user__username',)
-
+    list_display = ('user', 'file', 'uploaded_at')
+    list_filter = ('uploaded_at',)
