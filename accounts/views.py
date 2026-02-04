@@ -208,8 +208,7 @@ def analyze_resume(request):
     })
 
 
-
-
+# job matcher--------
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -235,15 +234,31 @@ def job_matcher(request):
     matches = []
 
     for role, skills in job_roles.items():
-        score = sum(1 for skill in skills if skill in text)
-        if score >= 2:
+
+        matched_skills = [skill for skill in skills if skill in text]
+
+        score = int((len(matched_skills) / len(skills)) * 100)
+
+        if score >= 40:  
             matches.append({
                 "role": role,
-                "match_score": score * 20
+                "match_percentage": score,
+                "matched_skills": matched_skills
             })
+
+    # sort by highest match ------------
+    matches.sort(key=lambda x: x['match_percentage'], reverse=True)
+
+    if not matches:
+        return Response({
+            "message": "No strong job matches found. Consider adding more skills."
+        })
 
     return Response({
         "recommended_roles": matches,
-        "message": "Job matching completed"
+        "message": "Job matching completed successfully"
     })
+
+# skill gap analyze --------
+
 

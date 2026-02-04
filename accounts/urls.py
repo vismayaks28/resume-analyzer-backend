@@ -11,7 +11,4 @@ urlpatterns = [
     path('job-matcher/', views.job_matcher),
     path('admin/users/', admin_users),
     path('admin/analytics/', admin_analytics),
-
-
-
 ]
