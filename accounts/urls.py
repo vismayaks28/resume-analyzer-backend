@@ -12,5 +12,6 @@ urlpatterns = [
     path('skill-gap/', views.skill_gap_analyzer),
     path('admin/users/', admin_users),
     path('admin/analytics/', admin_analytics),
+    path('job-description-match/', views.job_description_matcher, name='job_description_matcher'),
     
 ]

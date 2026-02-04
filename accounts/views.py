@@ -308,4 +308,45 @@ def skill_gap_analyzer(request):
         "message": "Skill gap analysis completed"
     })
 
+# job description ---------
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def job_description_matcher(request):
+    resume = Resume.objects.filter(user=request.user).last()
+    
+    if not resume or not resume.extracted_text:
+        return Response(
+            {"error": "Resume not ready or not uploaded"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    job_description = request.data.get('job_description', '')
+    if not job_description:
+        return Response(
+            {"error": "Job description is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    resume_text = re.sub(r'\s+', ' ', resume.extracted_text.lower())
+    job_text = re.sub(r'\s+', ' ', job_description.lower())
+
+    # extracting keyword
+    job_skills = set(re.findall(r'\b\w+\b', job_text))
+    resume_skills = set(re.findall(r'\b\w+\b', resume_text))
+
+    matched_skills = list(resume_skills & job_skills)
+    missing_skills = list(job_skills - resume_skills)
+
+    #scoring
+    if job_skills:
+        match_score = round(len(matched_skills) / len(job_skills) * 100)
+    else:
+        match_score = 0
+
+    return Response({
+        "matched_skills": matched_skills,
+        "missing_skills": missing_skills,
+        "match_score": match_score,
+        "message": "Job description analyzed successfully"
+    })
