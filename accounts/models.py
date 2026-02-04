@@ -22,6 +22,9 @@ class Resume(models.Model):
     file = models.FileField(upload_to='resumes/')
     extracted_text = models.TextField(blank=True, null=True) 
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    ats_score = models.IntegerField(null=True, blank=True)
+    
+
 
     def __str__(self):
         return f"{self.user.username} - {self.file.name}"

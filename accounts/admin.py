@@ -11,5 +11,5 @@ class CustomUserAdmin(admin.ModelAdmin):
 
 @admin.register(Resume)
 class ResumeAdmin(admin.ModelAdmin):
-    list_display = ('user', 'file', 'uploaded_at')
+    list_display = ('user', 'file', 'uploaded_at', 'ats_score')
     list_filter = ('uploaded_at',)

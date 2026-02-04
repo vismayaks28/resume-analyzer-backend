@@ -11,9 +11,9 @@ from .serializers import UserSerializer, ResumeSerializer
 from .models import Resume
 import pdfplumber
 import docx
+import re
 
-
-# ---------- SIGNUP ----------
+# ------ SIGNUP ---------
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup(request):
@@ -117,41 +117,96 @@ def upload_resume(request):
 
 
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def analyze_resume(request):
+
     resume = Resume.objects.filter(user=request.user).last()
 
     if not resume:
-        return Response(
-            {"error": "No resume uploaded"},
-            status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "No resume uploaded"}, status=404)
 
     if not resume.extracted_text:
-        return Response(
-            {"error": "Resume text not extracted"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": "Resume text not extracted"}, status=400)
+
+
+    if resume.ats_score is not None:
+        return Response({
+            "ATS_score": resume.ats_score,
+            "message": "Already analyzed"
+        })
+    
 
     text = resume.extracted_text.lower()
 
+    score = 0
+
+
+    # skill score------
     skills_db = [
-        "python", "django", "java", "spring",
-        "javascript", "react", "node",
-        "mongodb", "sql", "docker", "aws"
+        "python","django","java","spring",
+        "javascript","react","node",
+        "mongodb","sql","docker","aws"
     ]
 
     found_skills = [skill for skill in skills_db if skill in text]
+    skills_score = min(30, len(found_skills) * 5)
+    score += skills_score
 
-    score = min(100, 50 + len(found_skills) * 5)
+
+    # Section Check-------------
+    sections = ["education", "experience", "skills", "projects"]
+    found_sections = [sec for sec in sections if sec in text]
+
+    section_score = len(found_sections) * 6
+    score += section_score
+
+
+    # Contact Info-------
+
+    email_regex = r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"
+    phone_regex = r"\b\d{10}\b"
+
+    if re.search(email_regex, text):
+        score += 8
+
+    if re.search(phone_regex, text):
+        score += 7
+
+
+    # Resume Length-----------
+
+    word_count = len(text.split())
+
+    if 400 <= word_count <= 1200:
+        score += 10
+    elif 250 <= word_count < 400:
+        score += 5
+
+
+    # Action Verbs -------
+
+    verbs = ["developed","built","designed","implemented","created"]
+    found_verbs = [v for v in verbs if v in text]
+
+    if found_verbs:
+        score += 10
+
+
+    final_score = min(score, 100)
+
+    resume.ats_score = final_score
+    resume.save()
+
 
     return Response({
+        "ATS_score": final_score,
         "skills_found": found_skills,
-        "resume_score": score,
-        "message": "Resume analyzed successfully"
+        "sections_found": found_sections,
+        "word_count": word_count,
+        "message": "ATS analysis complete"
     })
+
 
 
 
