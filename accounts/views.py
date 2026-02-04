@@ -261,4 +261,51 @@ def job_matcher(request):
 
 # skill gap analyze --------
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def skill_gap_analyzer(request):
+    resume = Resume.objects.filter(user=request.user).order_by('-uploaded_at').first()
+
+    if not resume or not resume.extracted_text:
+        return Response(
+            {"error": "Resume not ready"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    text = resume.extracted_text.lower()
+
+    job_roles = {
+        "Backend Developer": ["python", "django", "sql", "docker", "aws"],
+        "Frontend Developer": ["javascript", "react", "html", "css"],
+        "Full Stack Developer": ["python", "django", "react", "sql", "docker"],
+        "Java Developer": ["java", "spring", "hibernate", "microservices"],
+        "DevOps Engineer": ["docker", "aws", "kubernetes", "ci/cd"]
+    }
+
+    best_role = None
+    highest_score = 0
+    missing_skills_output = []
+
+    for role, skills in job_roles.items():
+
+        matched = [skill for skill in skills if skill in text]
+        score = len(matched)
+
+        if score > highest_score:
+            highest_score = score
+            best_role = role
+            missing_skills_output = [skill for skill in skills if skill not in text]
+
+    if not best_role:
+        return Response({
+            "message": "Could not determine a suitable role."
+        })
+
+    return Response({
+        "recommended_role": best_role,
+        "skills_you_have": highest_score,
+        "missing_skills": missing_skills_output,
+        "message": "Skill gap analysis completed"
+    })
+
 

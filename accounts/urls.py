@@ -9,6 +9,8 @@ urlpatterns = [
     path('upload-resume/', views.upload_resume, name='upload_resume'),
     path('analyze-resume/', views.analyze_resume),
     path('job-matcher/', views.job_matcher),
+    path('skill-gap/', views.skill_gap_analyzer),
     path('admin/users/', admin_users),
     path('admin/analytics/', admin_analytics),
+    
 ]
